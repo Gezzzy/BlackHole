@@ -3,90 +3,105 @@
 #include <math.h>
 #include "Odes.h"
 
-int main(int argc, char* argv[])
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+double G = 1.0;
+double M = 1.0;
+double E;   // conserved energy
+
+double* rightSide(int N, double lambda, double *y)
+{
+    double *yt = malloc(sizeof(double)*N);
+
+    double r      = y[0];
+    double theta  = y[1];
+    double phi    = y[2];
+    double vr     = y[3];
+    double vtheta = y[4];
+    double vphi   = y[5];
+
+    double f = 1.0 - (2.0*G*M)/r;
+
+    // Reconstruct ṫ from conserved energy
+    double tdot = E / f;
+
+    // Equations of motion
+
+    // dr/dλ
+    yt[0] = vr;
+
+    // dθ/dλ
+    yt[1] = vtheta;
+
+    // dφ/dλ
+    yt[2] = vphi;
+
+    // dvr/dλ (radial acceleration)
+    yt[3] =
+        - (G*M)/(r*r*r) * (r - 2*G*M) * tdot*tdot
+        + (G*M)/(r*(r - 2*G*M)) * vr*vr
+        + (r - 2*G*M)*(vtheta*vtheta + sin(theta)*sin(theta)*vphi*vphi);
+
+    // d(vθ)/dλ
+    yt[4] =
+        - (2.0/r) * vtheta * vr
+        + sin(theta)*cos(theta)*vphi*vphi;
+
+    // d(vφ)/dλ
+    yt[5] =
+        - (2.0/r) * vphi * vr
+        - 2.0 * (cos(theta)/sin(theta)) * vtheta * vphi;
+
+    return yt;
+}
+
+int main()
 {
     int n = 16000;
+    int N = 6;
 
-    double M = 1;
-    double G = 1;
+    double x0 = 0.0;
+    double xf = 400.0;
 
-    double td0 = 0;
-    double t0 = 0;
+    double r0 = 10.0;
+    double theta0 = M_PI / 3.0;
+    double phi0 = 0.0;
 
-    double thetad0 = 0;
-    double theta0 = 3.14/2;
-
-    double rd0 = 0;
-    double r0 = 2*G*M*3;
-
-    double phid0 = 1;
-    double phi0 = 0;
-
-    int N = 8;
-    
-    double x0 = 0;
-    double xf = 25;
-    double y0V[8] = { td0, thetad0, rd0, phid0, t0, theta0, r0, phi0 };
+    double vr0 = 0.0;
+    double vtheta0 = 0.0;
+    double vphi0 = 0.05;
 
     double f0 = 1.0 - (2.0*G*M)/r0;
 
-    double E0 = f0 * td0;
-    double L0 = r0*r0 * sin(theta0)*sin(theta0) * phid0;
+    E = sqrt(
+        f0 * (1.0
+        + (vr0*vr0)/f0
+        + r0*r0*(vtheta0*vtheta0 + sin(theta0)*sin(theta0)*vphi0*vphi0))
+    );
 
-    double *rightSide(int N, double x, double *y)
-    {
-        double *yt = malloc(sizeof(double)*N);
-
-        //Define variables:
-        double td = y[0];
-        double thetad = y[1];
-        double rd = y[2];
-        double phid = y[3];
-        double t = y[4];
-        double theta = y[5];
-        double r = y[6];
-        double phi = y[7];
-
-        //Define EoM:
-        double vt = td;
-        double vtheta = thetad;
-        double vr = rd;
-        double vphi = phid;
-        double at = -(2*G*M)/( r * (r - 2*G*M) ) * rd * td;
-        double atheta = - (2/r) * thetad * rd + sin(theta) * cos(theta) * phid * phid;
-        double ar = - ((G*M)/(r*r*r))*(r - 2*G*M) * td*td + (G*M)/(r*(r - 2*G*M)) * rd* rd + (r - 2*G*M)*(thetad*thetad + sin(theta)*sin(theta)*phid*phid);
-        double aphi = - ((2)/(r)) * phid * rd - 2 * (cos(theta)/sin(theta)) * thetad * phid;
-
-        //Redefine yt
-        yt[0] = at;
-        yt[1] = atheta;
-        yt[2] = ar;
-        yt[3] = aphi;
-        yt[4] = vt;
-        yt[5] = vtheta;
-        yt[6] = vr;
-        yt[7] = vphi;
-
-        return yt;
-    }
+    double y0V[6] = { r0, theta0, phi0, vr0, vtheta0, vphi0 };
 
     double *solution = SolveOdeSystemRK4(n, N, x0, y0V, xf, rightSide);
+
     for(int i = 0; i < n; i++)
     {
-        double vt = solution[0*n + i];
-        double vtheta = solution[1*n + i];
-        double vr = solution[2*n + i];
-        double vphi = solution[3*n + i];
-        double t = solution[4*n + i];
-        double theta = solution[5*n + i];
-        double r = solution[6*n + i];
-        double phi = solution[7*n + i];
+        double r      = solution[0*n + i];
+        double theta  = solution[1*n + i];
+        double phi    = solution[2*n + i];
+        double vr     = solution[3*n + i];
+        double vtheta = solution[4*n + i];
+        double vphi   = solution[5*n + i];
 
-        double x = r*sin(theta)*cos(phi);
-        double y = r*sin(theta)*sin(phi);
-        double z = r*cos(theta);
+        double x = r * sin(theta) * cos(phi);
+        double y = r * sin(theta) * sin(phi);
+        double z = r * cos(theta);
 
         double lambda = solution[N*n + i];
-        printf("%f:%f:%f:%f\n", lambda, x, y, z);
+
+        printf("%f:%f:%f:%f:%f:%f:%f\n", lambda, x, y, z, vr, vtheta, vphi);
     }
+
+    return 0;
 }

@@ -3,39 +3,47 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-# Load data
 data = np.loadtxt("output.txt", delimiter=":")
 
 lam = data[:, 0]
 x = data[:, 1]
 y = data[:, 2]
 z = data[:, 3]
+vr = data[:, 4]
+vtheta = data[:, 5]
+vphi = data[:, 6]
 
-# Speed-up (frame skipping)
 step = 10
 x = x[::step]
 y = y[::step]
 z = z[::step]
 
-# Create figure
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 
-# Fixed scale: find the max extent
 max_range = np.max([np.max(np.abs(x)), np.max(np.abs(y)), np.max(np.abs(z))])
-
-ax.set_xlim(-max_range, max_range)
-ax.set_ylim(-max_range, max_range)
-ax.set_zlim(-max_range, max_range)
+padding = 0.1 * max_range
+ax.set_xlim(-max_range-padding, max_range+padding)
+ax.set_ylim(-max_range-padding, max_range+padding)
+ax.set_zlim(-max_range-padding, max_range+padding)
 
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
 ax.set_zlabel("Z")
 
-# Central mass (black hole)
-ax.scatter(0, 0, 0, s=100, color='k')
+# Draw black hole
+r_s = 2 * 1 * 1
 
-# Orbit line + moving point
+phi_s = np.linspace(0, 2*np.pi, 30)
+theta_s = np.linspace(0, np.pi, 30)
+phi_s, theta_s = np.meshgrid(phi_s, theta_s)
+
+X_s = r_s * np.sin(theta_s) * np.cos(phi_s)
+Y_s = r_s * np.sin(theta_s) * np.sin(phi_s)
+Z_s = r_s * np.cos(theta_s)
+
+ax.plot_surface(X_s, Y_s, Z_s, color='k', alpha=1.0)
+
 line, = ax.plot([], [], [], lw=1, color='blue')
 point, = ax.plot([], [], [], marker='o', color='red')
 
@@ -47,6 +55,9 @@ def init():
     return line, point
 
 def update(frame):
+    print("Frame: ", frame, "/", len(x))
+    print("\033[A\033[A")
+
     line.set_data(x[:frame], y[:frame])
     line.set_3d_properties(z[:frame])
 
@@ -58,7 +69,6 @@ def update(frame):
 
     return line, point
 
-# Create animation
 ani = FuncAnimation(
     fig,
     update,
@@ -68,7 +78,6 @@ ani = FuncAnimation(
     blit=True
 )
 
-# Save as GIF
 ani.save("orbit.gif", writer=PillowWriter(fps=30))
 
 plt.show()
