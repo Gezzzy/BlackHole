@@ -66,7 +66,7 @@ int main()
     double xf = 1600.0;
 
     double r0 = 10.0;
-    double theta0 = M_PI / 3.0;
+    double theta0 = M_PI / 2.0;
     double phi0 = 0.0;
 
     double vr0 = 0.0;

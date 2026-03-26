@@ -214,41 +214,6 @@ double complex* SolveOdeSystemRK4Complex(int n, int N, double x0, double complex
     return solution;
 }
 
-double* SolveOdeSystemRK4SBAGLIATO(int n, int N, double x0, double y0[n], double xf, double *(*f) (int, double, double*))
-{
-    double *Phi(int N, double x, double *y, double h, double* (*f)(int, double, double*))
-    {
-        double *k1 = (*f)(N, x, y);
-
-        double *y1 = malloc(sizeof(double)*N);
-
-        for(int i = 0; i < N; i++)
-            y1[i] = y[i] + 0.5*h*k1[i];
-
-        double *k2 = (*f)(N, x + h/2, y1);
-
-        for(int i = 0; i < N; i++)
-            y1[i] = y[i] + 0.5*h*k2[i];
-
-        double *k3 = (*f)(N, x + 0.5*h, y1);
-
-        for(int i = 0; i < N; i++)
-            y1[i] = y[i] + h*k2[i]; //errore qui
-
-        double *k4 = (*f)(N, x + 0.5*h, y1);
-
-        double *ret = malloc(sizeof(double)*N);
-        for(int i = 0; i < N; i++)
-            ret[i] = (k1[i]  + 2*k2[i]  + 2*k3[i] + k4[i])/6;
-
-        return ret;
-    }
-
-    double *solution = SolveOdeSystemStepMethod(n, N, x0, y0, xf, Phi, f);
-    return solution;
-}
-
-
 double *SolveSecondOrderOdeRK2(double x0, double xf, double y0, double yd0, int n, double (*f)(double, double, double))
 {
     int N = 2;
@@ -279,22 +244,6 @@ double *SolveSecondOrderOdeRK4(double x0, double xf, double y0, double yd0, int 
     double y0V[2] = { y0, yd0 };
 
     double *solution = SolveOdeSystemRK4(n, N, x0, y0V, xf, func);
-    return solution;
-}
-
-double *SolveSecondOrderOdeRK4SBAGLIATO(double x0, double xf, double y0, double yd0, int n, double (*f)(double, double, double))
-{
-    int N = 2;
-    double *func(int N, double x, double y[N])
-    {
-        double *ret = malloc(sizeof(double)*N);
-        ret[0] = y[1];
-        ret[1] = f(x, y[0], y[1]);
-        return ret;
-    }
-    double y0V[2] = { y0, yd0 };
-
-    double *solution = SolveOdeSystemRK4SBAGLIATO(n, N, x0, y0V, xf, func);
     return solution;
 }
 
