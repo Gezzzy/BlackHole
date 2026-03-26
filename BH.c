@@ -59,11 +59,11 @@ double* rightSide(int N, double lambda, double *y)
 
 int main()
 {
-    int n = 16000;
+    int n = 20000;
     int N = 6;
 
     double x0 = 0.0;
-    double xf = 400.0;
+    double xf = 1600.0;
 
     double r0 = 10.0;
     double theta0 = M_PI / 3.0;
