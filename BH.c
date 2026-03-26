@@ -94,13 +94,9 @@ int main()
         double vtheta = solution[4*n + i];
         double vphi   = solution[5*n + i];
 
-        double x = r * sin(theta) * cos(phi);
-        double y = r * sin(theta) * sin(phi);
-        double z = r * cos(theta);
-
         double lambda = solution[N*n + i];
 
-        printf("%f:%f:%f:%f:%f:%f:%f\n", lambda, x, y, z, vr, vtheta, vphi);
+        printf("%f:%f:%f:%f:%f:%f:%f\n", lambda, r, theta, phi, vr, vtheta, vphi);
     }
 
     return 0;

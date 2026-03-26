@@ -1,4 +1,3 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
@@ -6,12 +5,16 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 data = np.loadtxt("output.txt", delimiter=":")
 
 lam = data[:, 0]
-x = data[:, 1]
-y = data[:, 2]
-z = data[:, 3]
+r = data[:, 1]
+theta = data[:, 2]
+phi = data[:, 3]
 vr = data[:, 4]
 vtheta = data[:, 5]
 vphi = data[:, 6]
+
+x = r * np.sin(theta) * np.sin(phi)
+y = r * np.sin(theta) * np.cos(phi)
+z = r * np.cos(theta)
 
 step = 10
 x = x[::step]
